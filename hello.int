@@ -1,0 +1,9 @@
+lda 0 0
+lda 1 0
+lda 0b110 1
+beq 0b110 0 22
+out 1
+inc 0
+lda 0b110 3
+jmp 0b110
+hlt

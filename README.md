@@ -1,6 +1,14 @@
 
 # computer
 
+## Interrupts
+
+```md
+0: SIGILL
+1: Privilege violation
+2: Memory violation
+```
+
 ## Instructions
 
 ```md
@@ -82,8 +90,11 @@ CMP: compare with accumulator
 CPX: compare with x
 CPY: compare with y
 
+# Data Movement
+MOV: move data from source to destination
+
 ## Privileged instructions
-BRK: break/interrupt
+INT: interrupt
 RTI: return from interrupt
 CLP: clear privileged mode
 SWT: switch context from accumulator
