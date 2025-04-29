@@ -1,93 +1,92 @@
-from enum import Enum, auto
+from enum import Enum
 
 class Inst(Enum):
     # General instructions
-    NOP = auto()
-    SYSCALL = auto()
+    NOP = 0
+    SYSCALL = 1
 
     # Register operations
-    LDA = auto()
-    LDX = auto()
-    LDY = auto()
-    STA = auto()
-    STX = auto()
-    STY = auto()
-    TAX = auto()
-    TAY = auto()
-    TSX = auto()
-    TXA = auto()
-    TXS = auto()
-    TYA = auto()
+    LDA = 2
+    LDX = 3
+    LDY = 4
+    STA = 5
+    STX = 6
+    STY = 7
+    TAX = 8
+    TAY = 9
+    TSX = 10
+    TXA = 11
+    TXS = 12
+    TYA = 13
 
     # Arithmetic
-    INC = auto()
-    INA = auto()
-    INX = auto()
-    INY = auto()
-    DEC = auto()
-    DEX = auto()
-    DEY = auto()
-    ADD = auto()
-    SUB = auto()
-    MUL = auto()
-    DIV = auto()
-    MOD = auto()
+    INC = 14
+    INX = 15
+    INY = 16
+    DEC = 17
+    DEX = 18
+    DEY = 19
+    ADD = 20
+    SUB = 21
+    MUL = 22
+    DIV = 23
+    MOD = 24
 
     # Bitwise
-    AND = auto()
-    ORA = auto()
-    XOR = auto()
+    AND = 25
+    ORA = 26
+    XOR = 27
 
     # Shift & rotate
-    SHL = auto()
-    LSR = auto()
-    ROL = auto()
-    ROR = auto()
-    BIT = auto()
+    SHL = 28
+    LSR = 29
+    ROL = 30
+    ROR = 31
+    BIT = 32
 
     # Jump operations
-    JMP = auto()
-    JSR = auto()
-    RTS = auto()
+    JMP = 33
+    JSR = 34
+    RTS = 35
 
     # Branch if -operations
-    BCC = auto()
-    BCS = auto()
-    BEQ = auto()
-    BMI = auto()
-    BNE = auto()
-    BPL = auto()
-    BVC = auto()
-    BVS = auto()
+    BCC = 36
+    BCS = 37
+    BEQ = 38
+    BMI = 39
+    BNE = 40
+    BPL = 41
+    BVC = 42
+    BVS = 43
 
     # Flags
-    SEC = auto()
-    SED = auto()
-    CLC = auto()
-    CLD = auto()
-    CLV = auto()
+    SEC = 44
+    SED = 45
+    CLC = 46
+    CLD = 47
+    CLV = 48
 
     # Stack
-    PHA = auto()
-    PHP = auto()
-    PLA = auto()
-    PLP = auto()
+    PHA = 49
+    PHP = 50
+    PLA = 51
+    PLP = 52
 
     # Compare
-    CMP = auto()
-    CPX = auto()
-    CPY = auto()
+    CMP = 53
+    CPX = 54
+    CPY = 55
 
     # Data Movement
-    MOV = auto()
+    MOV = 56
 
     # Privileged instructions
-    INT = auto()
-    RTI = auto()
-    CLP = auto()
-    SWT = auto()
-    HLT = auto()
+    INT = 57
+    RTI = 58
+    CLP = 59
+    SWT = 60
+    HLT = 61
 
     # External device operations
-    IN = auto()
-    OUT = auto()
+    IN = 62
+    OUT = 63
