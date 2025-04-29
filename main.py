@@ -1,7 +1,8 @@
-from inst import Inst
+from inspect import signature
 import sys
 
 class Process:
+    __slots__ = ['pc','a','b','c','d','e','f','x','y','z','sp','flags','data_section']
     def __init__(self):
         self.pc = 0
 
@@ -16,12 +17,20 @@ class Process:
         self.z = 0
         self.sp = 0
         self.flags = 0
+        self.data_section = 0  # Pointer to the data section for this process
+
+    def __hash__(self):
+        return hash(f'{self.a}{self.b}{self.c}{self.d}{self.e}{self.f}{self.x}{self.y}{self.z}{self.sp}{self.flags}{mem.data}')
 
 KERNEL_MEMORY_AMOUNT = 0x0F00
 
 class Memory:
+    __slots__ = ['data', 'allocations']
     def __init__(self, size: int):
         self.data = [0] * size
+
+        # List of tuples of (procId, start, end)
+        self.allocations = []
 
     def __getitem__(self, address: int) -> int:
         self.check_access(address)
@@ -32,258 +41,128 @@ class Memory:
         self.data[address] = value
 
     def check_access(self, address: int) -> None:
-        if not privilegedMode and address <= KERNEL_MEMORY_AMOUNT:
-            raiseInterrupt(2)
-
-mem = Memory(65536)
-privilegedMode = True
-
-processes = [Process()]
-
-proc = processes[0]
-
-def raiseInterrupt(interrupt: int) -> True:
-    global mem, privilegedMode, proc
-
-    privilegedMode = True
-    proc = processes[0]
-    proc.a = interrupt
-
-    return True
-
-def processInst(inst: int, operands: list) -> None:
-    global mem, privilegedMode
-
-    if inst in [Inst.RTI, Inst.CLP, Inst.SWT]:
-        return raiseInterrupt(1)
-
-    match Inst(inst):
-        case Inst.NOP:
-            pass  # No operation
-
-        case Inst.LDA:
-            proc.a = mem[operands[0]]
-
-        case Inst.LDX:
-            proc.x = mem[operands[0]]
-
-        case Inst.LDY:
-            proc.y = mem[operands[0]]
-
-        case Inst.STA:
-            mem[operands[0]] = proc.a
-
-        case Inst.STX:
-            mem[operands[0]] = proc.x
-
-        case Inst.STY:
-            mem[operands[0]] = proc.y
-
-        case Inst.TAX:
-            proc.x = proc.a
-
-        case Inst.TAY:
-            proc.y = proc.a
-
-        case Inst.TSX:
-            proc.x = proc.sp
-
-        case Inst.TXA:
-            proc.a = proc.x
-
-        case Inst.TXS:
-            proc.sp = proc.x
-
-        case Inst.TYA:
-            proc.a = proc.y
-
-        case Inst.INC:
-            proc.a += 1
-
-        case Inst.INX:
-            x += 1
-
-        case Inst.INY:
-            proc.y += 1
-
-        case Inst.DEC:
-            proc.a -= 1
-
-        case Inst.DEX:
-            proc.x -= 1
-
-        case Inst.DEY:
-            proc.y -= 1
-
-        case Inst.ADD:
-            proc.a += mem[operands[0]]
-
-        case Inst.SUB:
-            proc.a -= mem[operands[0]]
-
-        case Inst.MUL:
-            proc.a *= mem[operands[0]]
-
-        case Inst.DIV:
-            proc.a //= mem[operands[0]]
-
-        case Inst.MOD:
-            proc.a %= mem[operands[0]]
-
-        case Inst.AND:
-            proc.a &= mem[operands[0]]
-
-        case Inst.ORA:
-            proc.a |= mem[operands[0]]
-
-        case Inst.XOR:
-            proc.a ^= mem[operands[0]]
-
-        case Inst.SHL:
-            proc.a <<= 1
-
-        case Inst.LSR:
-            proc.a >>= 1
-
-        case Inst.ROL:
-            proc.a = (proc.a << 1) | (proc.a >> 7)
-
-        case Inst.ROR:
-            proc.a = (proc.a >> 1) | (proc.a << 7)
-
-        case Inst.BIT:
-            proc.flags = (proc.a & mem[operands[0]]) != 0
-
-        case Inst.JMP:
-            proc.pc = operands[0]
-
-        case Inst.JSR:
-            mem[proc.sp] = proc.pc
-            proc.sp -= 1
-            proc.pc = operands[0]
-
-        case Inst.RTS:
-            proc.sp += 1
-            proc.pc = mem[proc.sp]
-
-        case Inst.BCC:
-            if not (proc.flags & 0x01):
-                proc.pc = operands[0]
-
-        case Inst.BCS:
-            if proc.flags & 0x01:
-                proc.pc = operands[0]
-
-        case Inst.BEQ:
-            if proc.flags & 0x02:
-                proc.pc = operands[0]
-
-        case Inst.BMI:
-            if proc.flags & 0x80:
-                proc.pc = operands[0]
-
-        case Inst.BNE:
-            if not (proc.flags & 0x02):
-                proc.pc = operands[0]
-
-        case Inst.BPL:
-            if not (proc.flags & 0x80):
-                proc.pc = operands[0]
-
-        case Inst.BVC:
-            if not (proc.flags & 0x40):
-                proc.pc = operands[0]
-
-        case Inst.BVS:
-            if proc.flags & 0x40:
-                proc.pc = operands[0]
-
-        case Inst.SEC:
-            proc.flags |= 0x01
-
-        case Inst.SED:
-            proc.flags |= 0x08
-
-        case Inst.CLC:
-            proc.flags &= ~0x01
-
-        case Inst.CLD:
-            proc.flags &= ~0x08
-
-        case Inst.CLV:
-            proc.flags &= ~0x40
-
-        case Inst.PHA:
-            mem[proc.sp] = proc.a
-            proc.sp -= 1
-
-        case Inst.PHP:
-            mem[proc.sp] = proc.flags
-            proc.sp -= 1
-
-        case Inst.PLA:
-            proc.sp += 1
-            proc.a = mem[proc.sp]
-
-        case Inst.PLP:
-            proc.sp += 1
-            proc.flags = mem[proc.sp]
-
-        case Inst.CMP:
-            proc.flags = (proc.a - mem[operands[0]]) == 0
-
-        case Inst.CPX:
-            proc.flags = (proc.x - mem[operands[0]]) == 0
-
-        case Inst.CPY:
-            proc.flags = (proc.y - mem[operands[0]]) == 0
-
-        case Inst.INT:
-            return raiseInterrupt(proc.a)
-
-        case Inst.RTI:
-            proc.sp += 1
-            proc.pc = mem[proc.sp]
-
-        case Inst.CLP:
-            privilegedMode = False
-
-        case Inst.SWT:
-            privilegedMode = True
-
-        case Inst.HLT:
-            exit(proc.a)
-
-        case Inst.IN:
-            proc.a = sys.stdin.read(1)
-
-        case Inst.OUT:
-            sys.stdout.write(chr(proc.a))
-
-        case _:
-            return raiseInterrupt(0)
-
-def loadFile(filename:str) -> bytes:
-    with open(filename,'rb') as f:
-        return list(f.read())
-
-def loadExecutable(executable:list[int],offset:int):
-    mem[offset:offset+len(executable)] = executable
-    return len(executable)
-
-import time as t
-
-def run() -> None:
-    while True:
-        operandCount = mem[proc.pc]
-        print(f'{operandCount} {str(Inst(mem[proc.pc+1])).replace('Inst.','')}')
-        processInst(mem[proc.pc+1],mem[proc.pc+2:proc.pc+2+operandCount])
-
-        proc.pc += 1 + operandCount
-
-        t.sleep(0.05)
-
-kernel = loadFile("kernel.bin")
-loadExecutable(kernel,0)
-run()
+        # For kernel mode, allow all access
+        if state.privilegedMode:
+            return
+
+        # For user mode, check if the address is in the process's allocated memory
+        current_process_id = next(pid for pid, p in state.processes.items() if p is state.proc)
+        valid_access = False
+
+        for proc_id, start, end in self.allocations:
+            if proc_id == current_process_id and start <= address < end:
+                valid_access = True
+                break
+
+        if not valid_access:
+            # Auto-allocate memory for the process
+            self.allocate(current_process_id, address, 1)
+            return  # Allow access after allocation
+
+    def allocate(self, process_id: int, address: int, size: int = 1) -> None:
+        """Allocate memory for a process, handling merging with adjacent allocations"""
+        end_address = address + size
+        
+        # Look for adjacent allocations to merge with
+        left_allocation = None
+        right_allocation = None
+
+        for i, (proc_id, start, end) in enumerate(self.allocations):
+            if proc_id == process_id:
+                if end == address:  # Adjacent on left
+                    left_allocation = i
+                if start == end_address:  # Adjacent on right
+                    right_allocation = i
+
+        if left_allocation is not None and right_allocation is not None:
+            # Merge both left and right allocations
+            left_proc_id, left_start, left_end = self.allocations[left_allocation]
+            right_proc_id, right_start, right_end = self.allocations[right_allocation]
+            new_allocation = (process_id, left_start, right_end)
+            # Remove in reverse order to avoid index issues
+            self.allocations.pop(max(left_allocation, right_allocation))
+            self.allocations.pop(min(left_allocation, right_allocation))
+            self.allocations.append(new_allocation)
+        elif left_allocation is not None:
+            # Extend left allocation
+            proc_id, start, end = self.allocations[left_allocation]
+            self.allocations[left_allocation] = (proc_id, start, end_address)
+        elif right_allocation is not None:
+            # Extend right allocation
+            proc_id, start, end = self.allocations[right_allocation]
+            self.allocations[right_allocation] = (proc_id, address, end)
+        else:
+            # Create new allocation for this address range
+            self.allocations.append((process_id, address, end_address))
+
+    def unallocate(self, process_id: int) -> None:
+        """Free all memory allocations for a specific process"""
+        self.allocations = [alloc for alloc in self.allocations if alloc[0] != process_id]
+
+
+
+# State
+class State:
+    def __init__(self):
+        # Use a dict to have indexes remain the same even if processes die
+        processes = {0: Process()}
+        proc = processes[0]
+
+        mem = Memory(0xFFFFF)
+
+        privilegedMode = True
+
+    def contextSwitch(self, procId:int) -> None:
+        global mem, privilegedMode, proc
+
+        if procId < 0 or procId >= len(self..processes):
+            raiseInterrupt(3)
+
+        self.proc = self.processes[procId]
+
+        return True
+
+    def raiseInterrupt(self, interrupt: int) -> True:
+        """
+            Raise an interrupt and hand control to the kernel.
+
+            ## Interrupts:
+            - 0: Syscall
+            - 1: Sigill (Illegal instruction)
+            - 2: Memory access violation
+            - 3: Invalid process ID
+            - 4: Invalid operand count
+        """
+
+        self.contextSwitch(0)
+        self.privilegedMode = True
+        self.proc.a = interrupt
+
+        return True
+
+state = State()
+
+instructions = {}
+def inst(name):
+    def inner(func):
+        instructions[name] = func
+        return func
+    return inner
+
+def execInstr(inst, args):
+    if inst not in instructions:
+        raiseInterrupt(1) # Invalid instruction
+    try:
+        return instructions[inst](*args)
+    except TypeError as e:
+        raiseInterrupt(4) # Invalid operand count
+
+def loadExecutable(path: str) -> int:
+    with open(path, 'rb') as f:
+        data = f.read()
+
+    # Find a spot to load the executable into
+
+def run():
+    ...
 

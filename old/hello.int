@@ -1,0 +1,24 @@
+db 72
+db 101
+db 108
+db 108
+db 111
+db 44
+db 32
+db 87
+db 111
+db 114
+db 108
+db 100
+db 33
+db 0
+ldx 2 0
+lda 2 "x"
+cmp 2 "a"
+lda 0 6
+lda 2 2
+beq 0 6
+out 1 1
+inx
+jmp 2 18
+hlt
